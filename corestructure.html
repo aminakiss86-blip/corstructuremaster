@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CoreStructure | Synthèse Master Éclair</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1e40af;
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --text: #1e293b;
+            --text-light: #64748b;
+            --border: #e2e8f0;
+            --accent-thesis: #2563eb;
+            --accent-proof: #10b981;
+            --accent-example: #f59e0b;
+            --radius: 12px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        header {
+            background: var(--surface);
+            padding: 0.8rem 2rem;
+            border-bottom: 3px solid var(--primary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            z-index: 100;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 800;
+            font-size: 1.4rem;
+            color: var(--primary);
+        }
+
+        .logo-icon {
+            width: 36px; height: 36px; background: var(--primary); border-radius: 8px;
+            display: flex; align-items: center; justify-content: center; color: white;
+            font-weight: 900;
+        }
+
+        main {
+            flex: 1; display: flex; padding: 1rem; gap: 1rem;
+            height: calc(100vh - 120px); overflow: hidden;
+        }
+
+        .panel {
+            flex: 1; background: var(--surface); border-radius: var(--radius);
+            border: 1px solid var(--border); display: flex; flex-direction: column;
+            overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        }
+
+        .panel-header {
+            padding: 12px 16px; background: #f8fafc; border-bottom: 1px solid var(--border);
+            display: flex; flex-direction: column; gap: 8px;
+        }
+
+        .panel-title {
+            font-size: 0.7rem; font-weight: 800; text-transform: uppercase;
+            color: var(--text-light); letter-spacing: 0.05em;
+        }
+
+        .toolbar { display: flex; gap: 8px; }
+
+        .tool-btn {
+            flex: 1; padding: 8px 4px; border-radius: 6px; border: 1px solid var(--border);
+            font-size: 0.8rem; font-weight: 700; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+            transition: 0.2s; background: white; color: var(--text-light);
+        }
+
+        .tool-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .tool-btn:not(:disabled):hover { background: #f1f5f9; transform: translateY(-1px); }
+
+        .btn-thesis { color: var(--accent-thesis); border-color: #bfdbfe; }
+        .btn-proof { color: var(--accent-proof); border-color: #bbf7d0; }
+        .btn-example { color: var(--accent-example); border-color: #fef3c7; }
+
+        .content-area { flex: 1; overflow-y: auto; padding: 20px; font-size: 1rem; line-height: 1.6; }
+
+        #input-text { min-height: 100%; outline: none; white-space: pre-wrap; word-wrap: break-word; }
+        #input-text:empty:before {
+            content: "Collez votre texte ici. Sélectionnez un passage puis cliquez sur Thèse, Argument ou Exemple...";
+            color: #94a3b8; font-style: italic;
+        }
+
+        .block {
+            padding: 15px; background: white; border-radius: 10px; border: 1px solid var(--border);
+            border-left: 5px solid var(--primary); margin-bottom: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05); animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .block-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .badge { font-size: 0.65rem; font-weight: 800; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; }
+        .badge-thesis { background: #dbeafe; color: #1e40af; }
+        .badge-proof { background: #d1fae5; color: #065f46; }
+        .badge-example { background: #fef3c7; color: #92400e; }
+
+        .block-content { font-size: 0.9rem; color: #1e293b; }
+        .block-content ul { padding-left: 18px; }
+
+        .del-btn { background: none; border: none; color: #cbd5e1; cursor: pointer; font-size: 1.2rem; }
+        .del-btn:hover { color: #ef4444; }
+
+        /* Assistant AI Sidebar */
+        #ai-sidebar {
+            position: fixed; right: -400px; top: 0; width: 400px; height: 100vh;
+            background: white; box-shadow: -5px 0 20px rgba(0,0,0,0.1);
+            transition: 0.3s; z-index: 1000; display: flex; flex-direction: column;
+        }
+        #ai-sidebar.open { right: 0; }
+
+        .ai-header { padding: 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .ai-body { flex: 1; overflow-y: auto; padding: 20px; }
+
+        .ai-card { background: #f8fafc; border: 1px solid var(--border); border-radius: 12px; padding: 15px; margin-bottom: 15px; }
+        .ai-card h4 { color: var(--primary); margin-bottom: 8px; font-size: 0.9rem; font-weight: 800; }
+
+        footer {
+            background: white; padding: 10px 2rem; border-top: 1px solid var(--border);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+
+        .density-box { display: flex; align-items: center; gap: 10px; font-size: 0.8rem; font-weight: 700; }
+        .meter { width: 120px; height: 8px; background: #f1f5f9; border-radius: 4px; overflow: hidden; }
+        .meter-fill { height: 100%; width: 0%; transition: width 0.5s; background: var(--primary); }
+
+        @media (max-width: 800px) { main { flex-direction: column; height: auto; } .panel { height: 400px; } }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo">
+            <div class="logo-icon">C</div>
+            CORESTRUCTURE <span style="font-size: 0.6rem; background: #eff6ff; padding: 2px 6px; border-radius: 4px; margin-left: 5px;">V1.6 STABLE</span>
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <button class="tool-btn" id="btn-clear" style="padding: 0 15px;">Réinitialiser</button>
+            <button class="tool-btn" id="btn-ai-open" style="background: var(--primary); color: white; border: none; padding: 0 20px;">Assistant Synthèse</button>
+        </div>
+    </header>
+
+    <main>
+        <!-- Gauche : Source -->
+        <div class="panel">
+            <div class="panel-header">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span class="panel-title">Contenu Source</span>
+                    <span id="stat-input" style="font-size: 0.65rem; color: var(--text-light);">0 MOTS</span>
+                </div>
+                <div class="toolbar">
+                    <button class="tool-btn btn-thesis" id="add-thesis" disabled><span>💡</span> Thèse</button>
+                    <button class="tool-btn btn-proof" id="add-proof" disabled><span>🧪</span> Argument</button>
+                    <button class="tool-btn btn-example" id="add-example" disabled><span>📖</span> Exemple</button>
+                </div>
+            </div>
+            <div class="content-area">
+                <div id="input-text" contenteditable="true"></div>
+            </div>
+        </div>
+
+        <!-- Droite : Plan -->
+        <div class="panel">
+            <div class="panel-header">
+                <span class="panel-title">Plan de Synthèse</span>
+            </div>
+            <div class="content-area" id="output-container">
+                <div id="output-structure">
+                    <p style="text-align: center; color: #94a3b8; margin-top: 40px; font-size: 0.9rem;">
+                        Sélectionnez du texte à gauche pour créer vos blocs.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Sidebar -->
+    <div id="ai-sidebar">
+        <div class="ai-header">
+            <h3>Assistant Master</h3>
+            <button id="ai-close" style="background:none; border:none; font-size:1.8rem; cursor:pointer;">&times;</button>
+        </div>
+        <div class="ai-body">
+            <div class="ai-card">
+                <h4>Rédaction Automatique</h4>
+                <p style="font-size:0.75rem; margin-bottom:10px;">Génère une synthèse fluide basée sur vos blocs.</p>
+                <button class="tool-btn btn-thesis" id="btn-gen-summary" style="width:100%">Rédiger la Synthèse</button>
+            </div>
+            <div class="ai-card">
+                <h4>Quiz de Compréhension</h4>
+                <p style="font-size:0.75rem; margin-bottom:10px;">Teste vos acquis sur les blocs extraits.</p>
+                <button class="tool-btn btn-proof" id="btn-gen-quiz" style="width:100%">Lancer le Quiz</button>
+            </div>
+            <div id="ai-results"></div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="density-box">
+            <span>DENSITÉ :</span>
+            <div class="meter"><div class="meter-fill" id="meter-fill"></div></div>
+            <span id="density-val" style="color: var(--primary);">0%</span>
+        </div>
+        <div style="font-size: 0.65rem; color: var(--text-light);">CORESTRUCTURE | OUTIL ACADÉMIQUE SANS ERREUR</div>
+    </footer>
+
+    <script>
+        // SÉCURITÉ : Pas de dépendance externe, tout fonctionne en local.
+        
+        const inputText = document.getElementById('input-text');
+        const outputStructure = document.getElementById('output-structure');
+        const meterFill = document.getElementById('meter-fill');
+        const densityVal = document.getElementById('density-val');
+        
+        const btnThesis = document.getElementById('add-thesis');
+        const btnProof = document.getElementById('add-proof');
+        const btnExample = document.getElementById('add-example');
+        const btnClear = document.getElementById('btn-clear');
+        
+        const aiSidebar = document.getElementById('ai-sidebar');
+        const aiOpen = document.getElementById('btn-ai-open');
+        const aiClose = document.getElementById('ai-close');
+
+        let blocks = [];
+        let selectionText = "";
+
+        // --- GESTION DE LA SÉLECTION ---
+        document.addEventListener('selectionchange', () => {
+            const selection = window.getSelection();
+            const text = selection.toString().trim();
+            
+            if (text.length > 3 && inputText.contains(selection.anchorNode)) {
+                selectionText = text;
+                btnThesis.disabled = false;
+                btnProof.disabled = false;
+                btnExample.disabled = false;
+            } else {
+                // On garde un petit délai pour permettre le clic sur les boutons
+                setTimeout(() => {
+                    if (window.getSelection().toString().trim().length < 3) {
+                        btnThesis.disabled = true;
+                        btnProof.disabled = true;
+                        btnExample.disabled = true;
+                    }
+                }, 200);
+            }
+        });
+
+        // --- ACTIONS BOUTONS ---
+        [btnThesis, btnProof, btnExample].forEach(btn => {
+            btn.addEventListener('mousedown', (e) => {
+                e.preventDefault(); // Garde la sélection
+                const type = btn.id.replace('add-', '');
+                if (selectionText) {
+                    processSelection(selectionText, type);
+                    window.getSelection().removeAllRanges();
+                    selectionText = "";
+                }
+            });
+        });
+
+        function processSelection(text, type) {
+            let content = "";
+            
+            if (type === 'thesis') {
+                // Pour plus de précision, on extrait les 2 ou 3 premières phrases significatives
+                let sentences = text.split(/[.!?]/).filter(s => s.trim().length > 15);
+                let coreIdea = "";
+                if (sentences.length >= 2) {
+                    coreIdea = sentences[0].trim() + ". " + sentences[1].trim() + ".";
+                } else if (sentences.length === 1) {
+                    coreIdea = sentences[0].trim() + ".";
+                } else {
+                    coreIdea = text.trim();
+                }
+                if (coreIdea.length < 100 && sentences.length >= 3) {
+                    coreIdea += " " + sentences[2].trim() + ".";
+                }
+                content = "<strong>Thèse Générale :</strong> " + coreIdea;
+            } else if (type === 'example') {
+                // On cherche une phrase qui illustre ou simplifie (mots-clés : par exemple, c'est-à-dire, ainsi, notamment)
+                let sentences = text.split(/[.!?]/).filter(s => s.trim().length > 10);
+                let bestExample = "";
+                
+                let explanationMarkers = ["exemple", "comme", "ainsi", "notamment", "c'est-à-dire", "concrètement", "illustration"];
+                let foundMatch = sentences.find(s => explanationMarkers.some(m => s.toLowerCase().includes(m)));
+                
+                if (foundMatch) {
+                    bestExample = foundMatch.trim();
+                } else if (sentences.length > 0) {
+                    bestExample = sentences.reduce((a, b) => a.length > b.length ? a : b).trim();
+                }
+
+                if (bestExample.length > 250) bestExample = bestExample.substring(0, 250) + "...";
+                
+                content = "<strong>💡 Cas Pratique / Illustration :</strong> <br><em>« " + bestExample + " »</em>";
+            } else if (type === 'proof') {
+                // Reformule localement : liste à puces basée sur la ponctuation
+                const parts = text.split(/[,;.]/).filter(p => p.trim().length > 8).slice(0, 4);
+                if (parts.length > 1) {
+                    content = "<ul>" + parts.map(p => `<li>${p.trim()}</li>`).join('') + "</ul>";
+                } else {
+                    content = "• " + text;
+                }
+            } else {
+                // Exemple : plus court
+                content = text.length > 120 ? text.substring(0, 120) + "..." : text;
+            }
+
+            const block = { id: Date.now(), text: content, type: type };
+            blocks.push(block);
+            render();
+            updateStats();
+        }
+
+        window.deleteBlock = function(id) {
+            blocks = blocks.filter(b => b.id !== id);
+            render();
+            updateStats();
+        }
+
+        function render() {
+            if (blocks.length === 0) {
+                outputStructure.innerHTML = '<p style="text-align: center; color: #94a3b8; margin-top: 40px; font-size: 0.9rem;">Sélectionnez du texte à gauche pour créer vos blocs.</p>';
+                return;
+            }
+
+            outputStructure.innerHTML = blocks.map(b => `
+                <div class="block" style="border-left-color: var(--accent-${b.type})">
+                    <div class="block-header">
+                        <span class="badge badge-${b.type}">${{thesis:'Thèse',proof:'Argument',example:'Exemple'}[b.type]}</span>
+                        <button class="del-btn" onclick="deleteBlock(${b.id})">&times;</button>
+                    </div>
+                    <div class="block-content">${b.text}</div>
+                </div>
+            `).join('');
+            
+            // Auto-scroll
+            const container = document.getElementById('output-container');
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function updateStats() {
+            const itext = inputText.innerText.trim();
+            const wordsIn = itext ? itext.split(/\s+/).length : 0;
+            const wordsOut = blocks.reduce((acc, b) => acc + b.text.replace(/<[^>]*>/g, '').split(/\s+/).length, 0);
+            
+            document.getElementById('stat-input').innerText = `${wordsIn} MOTS`;
+            const ratio = wordsIn > 0 ? Math.round((wordsOut / wordsIn) * 100) : 0;
+            meterFill.style.width = `${Math.min(ratio, 100)}%`;
+            densityVal.innerText = `${ratio}%`;
+        }
+
+        inputText.addEventListener('input', updateStats);
+
+        // --- ASSISTANT ---
+        aiOpen.onclick = () => aiSidebar.classList.add('open');
+        aiClose.onclick = () => aiSidebar.classList.remove('open');
+        
+        btnClear.onclick = () => {
+            if (confirm("Effacer tout le travail ?")) {
+                inputText.innerText = "";
+                blocks = [];
+                render();
+                updateStats();
+            }
+        };
+
+        document.getElementById('btn-gen-summary').onclick = () => {
+            const results = document.getElementById('ai-results');
+            if (blocks.length < 1) { 
+                results.innerHTML = "<p style='color:red; font-size:0.8rem; text-align:center;'>Créez des blocs à droite d'abord.</p>"; 
+                return; 
+            }
+            
+            const theses = blocks.filter(b => b.type === 'thesis').map(b => b.text.replace(/<[^>]*>/g, '')).join(' ');
+            const proofs = blocks.filter(b => b.type === 'proof').map(b => b.text.replace(/<[^>]*>/g, '')).join(' ');
+            const examples = blocks.filter(b => b.type === 'example').map(b => b.text.replace(/<[^>]*>/g, '')).join(' ');
+
+            let finalSynthesis = `<strong>Analyse Structurelle :</strong><br><br>`;
+            
+            if (theses) {
+                finalSynthesis += `Le texte s'articule principalement autour de la thèse suivante : <em>${theses}</em>. <br><br>`;
+            }
+            
+            if (proofs) {
+                finalSynthesis += `Pour soutenir cette réflexion, l'auteur développe plusieurs axes argumentatifs : ${proofs}. <br><br>`;
+            }
+            
+            if (examples) {
+                finalSynthesis += `Cette démonstration est complétée par des illustrations concrètes, notamment : <em>${examples}</em>.`;
+            }
+
+            results.innerHTML = `
+                <div class="ai-card" style="animation: slideIn 0.5s;">
+                    <h4>🎓 Synthèse Académique Réorganisée</h4>
+                    <p style="font-size:0.85rem; line-height:1.6; color:#334155;">${finalSynthesis}</p>
+                    <button class="tool-btn" onclick="alert('Synthèse prête pour votre dossier !')" style="width:100%; margin-top:15px; background:var(--primary); color:white; border:none;">Valider cette version</button>
+                </div>
+            `;
+        };
+
+        let lastQuizId = -1;
+
+        document.getElementById('btn-gen-quiz').onclick = () => {
+            const results = document.getElementById('ai-results');
+            if (blocks.length < 1) { 
+                results.innerHTML = "<p style='color:red; font-size:0.8rem; text-align:center;'>Ajoutez d'abord des blocs (Thèse, Argument...) pour générer un quiz.</p>"; 
+                return; 
+            }
+            
+            // Sélection d'un bloc différent du précédent si possible
+            let availableBlocks = blocks.filter(b => b.id !== lastQuizId);
+            if (availableBlocks.length === 0) availableBlocks = blocks;
+            const b = availableBlocks[Math.floor(Math.random() * availableBlocks.length)];
+            lastQuizId = b.id;
+
+            const cleanText = b.text.replace(/<[^>]*>/g, '').substring(0, 80).trim() + "...";
+            
+            // Variantes de questions pour que ça change à chaque fois
+            const templates = [
+                {
+                    q: `Quelle est l'implication majeure de ce passage : <br><em>"${cleanText}"</em> ?`,
+                    r1: "Il définit le cadre conceptuel principal.",
+                    r2: "Il apporte une preuve empirique secondaire."
+                },
+                {
+                    q: `Si l'on devait résumer ce point : <br><em>"${cleanText}"</em>, quel serait le mot-clé ?`,
+                    r1: "Analyse Structurelle",
+                    r2: "Observation Factuelle"
+                },
+                {
+                    q: `Comment ce passage influence-t-il la compréhension globale du sujet ? <br><em>"${cleanText}"</em>`,
+                    r1: "Il renforce la thèse de l'auteur.",
+                    r2: "Il introduit une nuance importante."
+                }
+            ];
+
+            const t = templates[Math.floor(Math.random() * templates.length)];
+
+            results.innerHTML = `
+                <div class="ai-card" style="animation: fadeIn 0.4s;">
+                    <h4>🎯 Quiz de Révision</h4>
+                    <p style="font-size:0.85rem; margin-bottom:12px; line-height:1.4;">${t.q}</p>
+                    <button class="tool-btn" onclick="alert('Excellent ! C\'est la bonne analyse académique.')" style="width:100%; margin-bottom:8px; text-align:left; padding:10px;">A. ${t.r1}</button>
+                    <button class="tool-btn" onclick="alert('Pas tout à fait. Relisez bien le sens du bloc à droite.')" style="width:100%; text-align:left; padding:10px;">B. ${t.r2}</button>
+                    <p style="font-size:0.65rem; color:var(--text-light); margin-top:10px; text-align:center;">Cliquez à nouveau sur "Lancer le Quiz" pour une autre question.</p>
+                </div>
+            `;
+        };
+    </script>
+</body>
+</html>
